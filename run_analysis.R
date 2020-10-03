@@ -2,9 +2,9 @@ library(data.table)
 library(reshape2)
 
 # Load activity labels and features
-activityLabels <- fread(file.path(getwd(), "UCI HAR Dataset/activity_labels.txt")
+activityLabels <- fread(file.path(getwd(), "raw_data/UCI HAR Dataset/activity_labels.txt")
                         , col.names = c("classLabels", "activityName"))
-features <- fread(file.path(getwd(), "UCI HAR Dataset/features.txt")
+features <- fread(file.path(getwd(), "/raw_data/UCI HAR Dataset/features.txt")
                   , col.names = c("index", "featureNames"))
 featuresWanted <- grep("(mean|std)\\(\\)", features[, featureNames])
 measurements <- features[featuresWanted, featureNames]
@@ -12,13 +12,12 @@ measurements <- gsub('[()]', '', measurements)
 
 # This function loads a specified data set and saves it into a variable
 load.data <- function(data.set) {
-    path = paste(getwd(), "/raw_data/UCI HAR Dataset/", data.set)
-    data <- fread(file.path(path, "/X_", data.set, ".txt"))[, featuresWanted,
-                                                            with = FALSE]
+    path = paste0(getwd(), "/raw_data/UCI HAR Dataset/", data.set)
+    data <- fread(file.path(path, paste0("X_", data.set, ".txt")))[, featuresWanted, with = FALSE]
     data.table::setnames(data, colnames(data), measurements)
-    activities <- fread(file.path(path, "/Y_", data.set, ".txt")
+    activities <- fread(file.path(path, paste0("y_", data.set, ".txt"))
                         , col.names = c("Activity"))
-    subjects <- fread(file.path(path, "/subject_", data.set, ".txt")
+    subjects <- fread(file.path(path, paste0("subject_", data.set, ".txt"))
                       , col.names = c("SubjectNum"))
     data <- cbind(subjects, activities, data)
     return(data)
@@ -41,4 +40,4 @@ full.data <- reshape2::melt(data = full.data, id = c("SubjectNum", "Activity"))
 full.data <- reshape2::dcast(data = full.data, SubjectNum + Activity ~ variable
                              , fun.aggregate = mean)
 
-data.table::fwrite(x = full.data, file = "tidyData.txt", quote = FALSE)
+data.table::fwrite(x = full.data, file = paste0(getwd(), "/transformed_data/tidyData.txt"), quote = FALSE)
